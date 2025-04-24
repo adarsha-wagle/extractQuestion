@@ -35,7 +35,8 @@ class OCRReader:
         except Exception as e:
             print(f"Error loading image: {e}")
             return None
-
+    
+    
     def preprocess_low_contrast(self, image):
         """
         Alternative preprocessing for low contrast images.
@@ -154,17 +155,21 @@ class OCRReader:
             
         return results
     
-    def save_debug_image(self, image, filename):
+    def save_debug_image(self, image, filename,directory = "assets/preprocessed/"):
         """
         Save preprocessed image for debugging purposes.
         
         :param image: Preprocessed image
         :param filename: Output filename
         """
-        cv2.imwrite(filename, image)
-        print(f"Debug image saved as {filename}")
+
+        if not os.path.exists(directory):  
+            os.makedirs(directory)
+        full_path = os.path.join(directory, filename)
+        cv2.imwrite(full_path, image)
+        print(f"Debug image saved as {full_path}")
     
-    def process_image(self, image_path, preprocess_method='low_contrast', try_all=False, save_debug=False):
+    def process_image(self, image_path, preprocess_method='low_contrast', try_all=False, debug_path=""):
         """
         Process an image and extract text.
         
@@ -181,7 +186,7 @@ class OCRReader:
         if try_all:
             results = self.try_all_methods(image)
             
-            if save_debug:
+            if debug_path != "":
                 # Save debug images for each method
                 for method in [ 'low_contrast', 'tesseract_optimized']:
                     # if method == 'black_text':
@@ -193,11 +198,11 @@ class OCRReader:
                     
                     base_name = os.path.splitext(os.path.basename(image_path))[0]
                     debug_filename = f"{base_name}_{method}_debug.png"
-                    self.save_debug_image(debug_img, debug_filename)
+                    self.save_debug_image(debug_img, debug_filename,debug_path)
             
             return results
         else:
-            if save_debug:
+            if debug_path != "":
                 # if preprocess_method == 'black_text':
                 #     debug_img = self.preprocess_black_text(image)
                 if preprocess_method == 'low_contrast':
@@ -207,6 +212,6 @@ class OCRReader:
                 
                 base_name = os.path.splitext(os.path.basename(image_path))[0]
                 debug_filename = f"{base_name}_{preprocess_method}_debug.png"
-                self.save_debug_image(debug_img, debug_filename)
+                self.save_debug_image(debug_img, debug_filename,debug_path)
             
             return self.extract_text(image, preprocess_method)
